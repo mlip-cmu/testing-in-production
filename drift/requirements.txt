@@ -1,0 +1,2 @@
+evidently==0.7.23
+prometheus_client==0.26.0

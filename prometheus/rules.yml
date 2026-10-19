@@ -1,0 +1,148 @@
+# Windows assume the default speed of 30 real seconds per simulated day:
+#   [1m]  ~ the last 2 simulated days
+#   [5m]  ~ the last 10 simulated days
+#   offset 3m30s ~ one simulated week ago
+# If you change the speed on the control panel, alert timing changes with it.
+
+groups:
+  - name: agent_recording
+    rules:
+      - record: agent:conversations:rate1m
+        expr: sum(rate(agent_conversations_total[1m]))
+      - record: agent:completion_rate:1m
+        expr: sum(rate(agent_conversations_total{outcome="completed"}[1m])) / sum(rate(agent_conversations_total[1m]))
+      - record: agent:completion_rate:5m
+        expr: sum(rate(agent_conversations_total{outcome="completed"}[5m])) / sum(rate(agent_conversations_total[5m]))
+      - record: agent:completion_rate_by_prompt:1m
+        expr: sum by (prompt_version) (rate(agent_conversations_total{outcome="completed"}[1m])) / sum by (prompt_version) (rate(agent_conversations_total[1m]))
+      - record: agent:completion_rate_by_llm:1m
+        expr: sum by (llm_version) (rate(agent_conversations_total{outcome="completed"}[1m])) / sum by (llm_version) (rate(agent_conversations_total[1m]))
+      - record: agent:handoff_rate:1m
+        expr: sum(rate(agent_conversations_total{outcome="handoff"}[1m])) / sum(rate(agent_conversations_total[1m]))
+      - record: agent:violations_per_order:1m
+        expr: sum by (check) (rate(agent_invariant_violations_total[1m])) / ignoring(check) group_left sum(rate(agent_orders_total[1m]))
+      - record: agent:corrections_per_conversation:1m
+        expr: sum(rate(agent_user_corrections_total[1m])) / sum(rate(agent_conversations_total[1m]))
+      - record: agent:judge_fail_rate:1m
+        expr: sum(rate(agent_judge_evaluations_total{verdict="fail"}[1m])) / sum(rate(agent_judge_evaluations_total[1m]))
+      - record: agent:tool_error_rate:1m
+        expr: sum(rate(agent_tool_calls_total{status="error"}[1m])) / sum(rate(agent_tool_calls_total[1m]))
+      - record: agent:turn_latency_p95:1m
+        expr: histogram_quantile(0.95, sum by (le) (rate(agent_turn_latency_seconds_bucket[1m])))
+      - record: agent:cost_per_order:1m
+        expr: sum(rate(agent_llm_cost_dollars_total[1m])) / sum(rate(agent_orders_total[1m]))
+      - record: agent:refund_rate:1m
+        expr: sum(rate(agent_refunds_total[1m])) / sum(rate(agent_orders_total[1m]))
+      - record: agent:injection_flag_rate:1m
+        expr: sum(rate(agent_injection_flags_total[1m])) / sum(rate(agent_conversations_total[1m]))
+      - record: surprise:repeat_rate:1m
+        expr: sum(rate(surprise_recommendations_total{repeat="1"}[1m])) / sum(rate(surprise_recommendations_total[1m]))
+      - record: surprise:acceptance_rate:1m
+        expr: sum(rate(surprise_recommendations_total{accepted="1"}[1m])) / sum(rate(surprise_recommendations_total[1m]))
+      - record: shadow:disagreement_rate:1m
+        expr: sum(rate(shadow_comparisons_total{result="disagree"}[1m])) / sum(rate(shadow_comparisons_total[1m]))
+      - record: agent:discount_violations_per_conversation:1m
+        expr: sum(rate(agent_invariant_violations_total{check="discount_policy"}[1m])) / sum(rate(agent_conversations_total[1m]))
+      - record: shadow:discount_violation_rate:1m
+        expr: sum(rate(shadow_invariant_violations_total{check="discount_policy"}[1m])) / sum(rate(shadow_comparisons_total[1m]))
+
+  - name: agent_alerts
+    rules:
+      # --- jumps after releases -------------------------------------------
+      - alert: CompletionRateJump
+        expr: agent:completion_rate:1m < 0.93 * (agent:completion_rate:1m offset 2m)
+        for: 15s
+        labels: {severity: page, topic: release}
+        annotations:
+          summary: "Completion rate fell to {{ $value | humanizePercentage }}, well below 4 simulated days ago"
+          description: "Sudden drop. Check what changed: prompt versions, LLM version, tool health."
+      - alert: CanaryCompletionDrop
+        expr: agent:completion_rate_by_prompt:1m{prompt_version!="v1"} < ignoring(prompt_version) group_left agent:completion_rate_by_prompt:1m{prompt_version="v1"} - 0.10
+        for: 20s
+        labels: {severity: page, topic: release}
+        annotations:
+          summary: "Prompt {{ $labels.prompt_version }} completes only {{ $value | humanizePercentage }} of conversations, 10+ points below v1"
+          description: "Roll back the canary."
+
+      # --- slow degradation -------------------------------------------------
+      - alert: CompletionBelowLastWeek
+        expr: agent:completion_rate:5m < (agent:completion_rate:5m offset 3m30s) - 0.03
+        for: 30s
+        labels: {severity: ticket, topic: slow-degradation}
+        annotations:
+          summary: "Completion over the last 10 simulated days is 3+ points below a week earlier ({{ $value | humanizePercentage }})"
+          description: "Slow degradation rarely trips jump alerts. Look for staleness, drift, or feedback loops."
+      - alert: InvariantViolationsHigh
+        expr: agent:violations_per_order:1m{check!="discount_policy"} > 0.02
+        for: 20s
+        labels: {severity: page, topic: invariants}
+        annotations:
+          summary: "{{ $labels.check }} on {{ $value | humanizePercentage }} of orders"
+          description: "Orders contain items or prices that do not match the menu service. Is the menu index stale? Is the menu API up?"
+      - alert: DiscountPolicyViolations
+        expr: agent:violations_per_order:1m{check="discount_policy"} > 0.01
+        for: 20s
+        labels: {severity: page, topic: adversaries}
+        annotations:
+          summary: "Discounts beyond policy on {{ $value | humanizePercentage }} of orders"
+          description: "Could be a model change or an attack. Compare by llm_version and check injection flags."
+      - alert: InjectionFlagsSpike
+        expr: agent:injection_flag_rate:1m > 0.008
+        for: 20s
+        labels: {severity: ticket, topic: adversaries}
+        annotations:
+          summary: "{{ $value | humanizePercentage }} of requests flagged as possible prompt injection"
+      - alert: DataDriftDetected
+        expr: drift_share_of_columns > 0.25
+        for: 20s
+        labels: {severity: ticket, topic: drift}
+        annotations:
+          summary: "{{ $value | humanizePercentage }} of monitored columns drifted from the reference window"
+          description: "Check the drift panel for which columns. If the change is the new normal, reset the reference."
+      - alert: JudgeFailRateHigh
+        expr: agent:judge_fail_rate:1m > 0.20
+        for: 30s
+        labels: {severity: ticket, topic: quality}
+        annotations:
+          summary: "LLM judge flags {{ $value | humanizePercentage }} of sampled conversations"
+      - alert: RefundRateHigh
+        expr: agent:refund_rate:1m > 0.06
+        for: 30s
+        labels: {severity: ticket, topic: slow-degradation}
+        annotations:
+          summary: "Refunds on {{ $value | humanizePercentage }} of orders"
+          description: "Refunds arrive 1-3 simulated days after the order, so this alert lags the cause."
+      - alert: SurpriseCatalogCollapse
+        expr: surprise_catalog_coverage < 0.4
+        for: 30s
+        labels: {severity: ticket, topic: feedback-loop}
+        annotations:
+          summary: "Surprise me recommended only {{ $value | humanizePercentage }} of open restaurants yesterday"
+          description: "Is the recommender learning only from its own recommendations?"
+
+      # --- operations ----------------------------------------------------------
+      - alert: ToolErrorRateHigh
+        expr: agent:tool_error_rate:1m > 0.05
+        for: 15s
+        labels: {severity: page, topic: ops}
+        annotations:
+          summary: "{{ $value | humanizePercentage }} of tool calls are failing"
+      - alert: TurnLatencyP95High
+        expr: agent:turn_latency_p95:1m > 4
+        for: 20s
+        labels: {severity: page, topic: ops}
+        annotations:
+          summary: "p95 latency per turn is {{ $value | humanizeDuration }}"
+      - alert: CostPerOrderHigh
+        expr: agent:cost_per_order:1m > 0.058
+        for: 30s
+        labels: {severity: ticket, topic: ops}
+        annotations:
+          summary: "LLM cost per order is ${{ $value | printf \"%.3f\" }}"
+      - alert: ShadowModelDiscountViolations
+        expr: shadow:discount_violation_rate:1m > 0.008
+        for: 30s
+        labels: {severity: info, topic: release}
+        annotations:
+          summary: "Shadow llm-2026-09 would violate discount policy on {{ $value | humanizePercentage }} of conversations"
+          description: "Found before any user saw it. Do not promote without a fix."

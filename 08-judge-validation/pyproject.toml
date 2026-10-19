@@ -1,0 +1,6 @@
+[project]
+name = "judge-validation"
+version = "0.1.0"
+description = "Measure the LLM judge against hand-labeled traces"
+requires-python = ">=3.12"
+dependencies = []

@@ -1,0 +1,47 @@
+name: demos
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  demos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Start the stack
+        run: docker compose up --build -d
+
+      - name: Wait for the simulator and for a baseline to accumulate
+        run: |
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8000/api/state >/dev/null && break
+            sleep 2
+          done
+          # the drift job needs two full simulated days, the weekly alert seven
+          sleep 240
+
+      - name: Run every scenario
+        run: ./run_all.sh
+
+      - name: Show what changed in the transcripts
+        if: always()
+        run: git diff --stat -- '*/transcript.txt' || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: transcripts
+          path: "*/transcript.txt"
+
+      - name: Stack logs on failure
+        if: failure()
+        run: docker compose logs --tail=100
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v

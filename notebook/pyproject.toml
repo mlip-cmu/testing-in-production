@@ -1,0 +1,15 @@
+[project]
+name = "lecture-notebook"
+version = "0.1.0"
+description = "Experiment analysis, delayed labels, and judge validation for the lecture"
+requires-python = ">=3.12"
+dependencies = [
+    "jupyterlab",
+    "pandas",
+    "numpy",
+    "scipy",
+    "statsmodels",
+    "matplotlib",
+    "evidently==0.7.23",
+    "anthropic",   # only used by the live LLM-as-judge cell in section 9
+]

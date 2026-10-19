@@ -1,0 +1,30 @@
+day    8.8   switches back to defaults, drift reference reset
+
+--- baseline, no scenario running
+simulated day    8.8   30 s per simulated day
+switches on:   {'surprise_exploration': True}
+
+--- reading 1
+day    8.8   completion rate                             77.10%
+day    8.8   handoff to human                             4.44%
+day    8.8   corrections per conversation                12.03%
+day    8.8   judge fail rate (10% sample)                11.94%
+day    8.8   refund rate (delayed)                        2.28%
+day    8.8   invariant violations per order
+           allergen                                     0.69%
+           discount_policy                              0.50%
+day    8.8   LLM cost per order                         $ 0.0450
+day    8.8   firing alerts: none
+day   12.8   waited 4.0 simulated days
+
+--- reading 2
+day   12.8   completion rate                             77.41%
+day   12.8   handoff to human                             4.52%
+day   12.8   corrections per conversation                12.05%
+day   12.8   judge fail rate (10% sample)                 8.89%
+day   12.8   refund rate (delayed)                        2.20%
+day   12.8   invariant violations per order
+           allergen                                     0.67%
+           discount_policy                              0.48%
+day   12.8   LLM cost per order                         $ 0.0449
+day   12.8   firing alerts: none

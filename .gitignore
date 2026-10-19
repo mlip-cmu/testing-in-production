@@ -1,0 +1,12 @@
+# Runtime event logs written by the simulator. data/sample/ is committed, so the
+# notebook and the judge demo work without Docker.
+data/events/
+
+# uv environments; the lock files next to each pyproject.toml are committed.
+.venv/
+
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+.DS_Store

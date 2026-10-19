@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Food ordering agent: scenario control</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛎️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --steel: #DDE2E6;
+  --rail: #9AA5AE;
+  --paper: #FFFFFF;
+  --ink: #1B2630;
+  --muted: #56636E;
+  --heat: #F0A202;
+  --heat-tint: #FFF4DA;
+  --alarm: #B8322A;
+  --ok: #2B7A5B;
+  --cond: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--steel); color: var(--ink); font: 16px/1.45 var(--body); }
+button, select { font: inherit; }
+:focus-visible { outline: 3px solid var(--heat); outline-offset: 2px; }
+
+/* the pass: dark bar with the heat lamp glow */
+.pass {
+  background: var(--ink); color: #fff;
+  border-bottom: 4px solid var(--heat);
+  box-shadow: 0 10px 30px -12px rgba(240, 162, 2, .55);
+  padding: 14px 28px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px;
+  position: sticky; top: 0; z-index: 5;
+}
+.clock { font-family: var(--cond); font-weight: 700; font-size: 44px; line-height: 1; letter-spacing: .5px; }
+.clock small { font-weight: 500; font-size: 26px; color: #B9C3CB; margin-left: 10px; }
+.clock.paused { color: var(--heat); }
+.pass .spacer { flex: 1; }
+.pass .ctl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pass button, .pass select {
+  background: transparent; color: #fff; border: 1.5px solid #6E7C88; border-radius: 4px;
+  padding: 7px 12px; cursor: pointer;
+}
+.pass button:hover, .pass select:hover { border-color: #fff; }
+.pass button.primary { background: var(--heat); color: var(--ink); border-color: var(--heat); font-weight: 600; }
+.pass a { color: #fff; font-weight: 600; text-underline-offset: 3px; }
+.pass select option { color: var(--ink); }
+
+main { max-width: 1360px; margin: 0 auto; padding: 26px 28px 60px; }
+h2 { font-family: var(--cond); font-weight: 600; font-size: 28px; margin: 30px 0 0; }
+.tickets { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 30px 18px;
+           align-items: start; padding-top: 22px; }
+
+/* a ticket hangs from the rail */
+.ticket {
+  background: var(--paper); margin-top: 0; padding: 18px 18px 16px;
+  border-radius: 0 0 3px 3px; position: relative;
+  box-shadow: 0 3px 0 rgba(27, 38, 48, .08);
+  border-top: 5px solid transparent;
+  transition: background-color .25s, border-color .25s;
+}
+.ticket::after { /* the rail segment; segments join across the gap */
+  content: ""; position: absolute; top: -21px; left: -10px; right: -10px; height: 8px;
+  background: var(--rail); box-shadow: inset 0 -2px 0 rgba(0,0,0,.18);
+}
+.ticket::before { /* the clip */
+  content: ""; position: absolute; top: -14px; left: 50%; width: 34px; height: 9px;
+  transform: translateX(-50%); background: #6E7C88; border-radius: 0 0 2px 2px; z-index: 1;
+}
+.ticket.on { background: var(--heat-tint); border-top-color: var(--heat); }
+.ticket h3 { font-family: var(--cond); font-weight: 700; font-size: 25px; line-height: 1.05; margin: 0 0 2px; }
+.concept { color: var(--muted); font-weight: 600; font-size: 14px; margin: 0 0 10px; }
+.ticket p { margin: 0 0 10px; font-size: 15px; }
+.watch { font-size: 14px; color: var(--muted); border-top: 1px dashed #C3CBD1; padding-top: 8px; margin-top: 4px; }
+.watch b { color: var(--ink); font-weight: 600; }
+.status { font-weight: 600; font-size: 14px; margin: 10px 0 8px; }
+.status.bad { color: var(--alarm); }
+.status.good { color: var(--ok); }
+.act {
+  width: 100%; padding: 10px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;
+  border: 2px solid var(--ink); background: var(--ink); color: #fff;
+}
+.act.undo { background: #fff; color: var(--ink); }
+.act:hover { filter: brightness(1.15); }
+.seg { display: flex; border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; }
+.seg button { flex: 1; padding: 9px 0; border: 0; background: #fff; cursor: pointer; font-weight: 600; }
+.seg button + button { border-left: 1px solid #C3CBD1; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.sub { margin-top: 10px; }
+
+.lower { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 36px; }
+.box { background: var(--paper); padding: 18px 20px; border-radius: 3px; }
+.box h2 { margin: 0 0 8px; font-size: 24px; }
+.log { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow: auto; font-size: 15px; }
+.log li { padding: 5px 0; border-bottom: 1px solid #E6EAED; display: grid; grid-template-columns: 70px 1fr; gap: 8px; }
+.log .d { color: var(--muted); }
+.truth dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; margin: 12px 0 0; font-size: 15px; }
+.truth dd { margin: 0; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.truth .hint { color: var(--muted); font-size: 14px; margin: 0; }
+.hidden { display: none; }
+.error { background: var(--alarm); color: #fff; padding: 10px 28px; }
+@media (max-width: 760px) { .lower { grid-template-columns: 1fr; } .clock { font-size: 34px; } }
+@media (prefers-reduced-motion: reduce) { .ticket { transition: none; } }
+</style>
+</head>
+<body>
+<div class="pass">
+  <div class="clock" id="clock">Day –</div>
+  <div class="ctl">
+    <button class="primary" id="pause">Pause</button>
+    <label>One simulated day =
+      <select id="speed" aria-label="Real seconds per simulated day">
+        <option value="15">15 s</option><option value="30">30 s</option>
+        <option value="60">60 s</option><option value="120">2 min</option>
+      </select>
+    </label>
+    <button id="refreset" title="The drift job will compare against the next two simulated days">Reset drift reference</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="ctl"><a id="grafana" href="http://localhost:3000" target="_blank" rel="noopener">Open Grafana</a>
+    <a id="prom" href="http://localhost:9090/alerts" target="_blank" rel="noopener">Prometheus alerts</a></div>
+</div>
+<div class="error hidden" id="err">Can't reach the simulator. Check that the <b>simulator</b> container is running.</div>
+
+<main>
+  <h2>Slow degradation</h2>
+  <div class="tickets" id="slow"></div>
+
+  <h2>Releases and experiments</h2>
+  <div class="tickets" id="release"></div>
+
+  <h2>Chaos experiment</h2>
+  <div class="tickets" id="chaos"></div>
+
+  <div class="lower">
+    <section class="box">
+      <h2>What you changed</h2>
+      <ul class="log" id="log"><li><span class="d"></span><span>Nothing yet. Flip a ticket to start a scenario.</span></li></ul>
+    </section>
+    <section class="box truth">
+      <h2>What's really happening</h2>
+      <p class="hint">Hidden ground truth. A real team never sees this. Reveal it after the class has guessed from the dashboard.</p>
+      <button class="act undo sub" id="reveal" aria-expanded="false">Reveal ground truth</button>
+      <dl id="truth" class="hidden"></dl>
+    </section>
+  </div>
+</main>
+
+<script>
+const TICKETS = [
+  { group: "slow", key: "menu_sync_paused", title: "Menu sync stops", concept: "Stale model",
+    what: "The nightly job that copies restaurant menus into the agent's search index fails silently. Every day more of the index is out of date.",
+    watch: "Invariant violations, user corrections, then refunds a few days later",
+    on: "Stop menu sync", off: "Fix menu sync", onStatus: "Sync broken, index going stale", offStatus: "Menus synced nightly" },
+  { group: "slow", key: "new_city_launched", title: "Launch in Honolulu", concept: "Data drift",
+    what: "A new city ramps to 30% of traffic over three days, with cuisines and phrasing the agent rarely saw.",
+    watch: "Drift panel, requests by city, judge failures",
+    on: "Launch Honolulu", off: "Pause Honolulu", onStatus: "Honolulu traffic ramping", offStatus: "Two cities only" },
+  { group: "slow", key: "surprise_exploration", invert: true, title: "Surprise me explores", concept: "Feedback loop",
+    what: "Surprise me retrains nightly. Without random exploration it learns only from orders it caused itself.",
+    watch: "Catalog coverage, top-5 share, repeat recommendations",
+    on: "Turn exploration off", off: "Turn exploration on", onStatus: "Exploration off, loop closing", offStatus: "35% exploration" },
+  { group: "slow", key: "injection_campaign", title: "Injection campaign", concept: "Adversaries",
+    what: "Attackers paste instructions into requests to get free discounts, and rephrase over time to dodge detection.",
+    watch: "Discount violations, discount dollars, injection flags",
+    on: "Start the campaign", off: "End the campaign", onStatus: "Attack under way", offStatus: "No attack",
+    sub: { key: "injection_guardrail", on: "Deploy guardrail", off: "Remove guardrail" } },
+  { group: "slow", key: "flywheel", title: "Mine production failures", concept: "ML flywheel",
+    what: "Every night the most common judge-flagged failure becomes new eval cases and few-shot examples, and gets rarer.",
+    watch: "Judge failures by mode",
+    on: "Start mining failures", off: "Stop mining failures", onStatus: "Improving nightly", offStatus: "Failure rates flat" },
+
+  { group: "release", key: "llm_upgraded", title: "Provider upgrades the LLM", concept: "Jump after release",
+    what: "The model alias silently points to llm-2026-09: faster, wordier, and more willing to give discounts.",
+    watch: "Latency, tokens and cost, turns, completion, discount violations",
+    on: "Upgrade the LLM", off: "Pin the old LLM", onStatus: "Running llm-2026-09", offStatus: "Running llm-2026-05" },
+  { group: "release", key: "shadow_new_llm", title: "Shadow-test the new LLM", concept: "Shadow release",
+    what: "llm-2026-09 handles the same requests in the background. Users only see production's answers.",
+    watch: "Shadow agreement, shadow invariant violations",
+    on: "Start shadow test", off: "Stop shadow test", onStatus: "Shadowing llm-2026-09", offStatus: "No shadow traffic" },
+  { group: "release", key: "upsell_experiment_pct", pct: [0, 10, 50], title: "Upsell prompt A/B test", concept: "A/B experiment",
+    what: "Prompt v2-upsell suggests sides and drinks. Users are hashed into arms, so each user always sees the same prompt.",
+    watch: "Experiment row by prompt version, then the notebook for statistics" },
+  { group: "release", key: "canary_v3_pct", pct: [0, 5, 10, 25], title: "Canary: prompt v3", concept: "Canary release",
+    what: "Prompt v3 has a bug: it often forgets to call place_order. Roll it out to a slice and watch the alert.",
+    watch: "Completion by prompt version, CanaryCompletionDrop alert" },
+
+  { group: "chaos", key: "menu_api_outage", title: "Menu API outage", concept: "Chaos experiment",
+    what: "Most menu lookups fail. Does the agent say the item is unavailable, or invent one?",
+    watch: "Tool errors, handoffs, item-not-on-menu violations, latency",
+    on: "Take the menu API down", off: "Restore the menu API", onStatus: "Menu API failing", offStatus: "Menu API healthy" },
+];
+
+const $ = (id) => document.getElementById(id);
+let current = null;
+
+async function post(url, body) {
+  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await r.text());
+  await refresh();
+}
+
+function isActive(t, sw) {
+  if (t.pct) return sw[t.key] > 0;
+  return t.invert ? !sw[t.key] : !!sw[t.key];
+}
+
+function build() {
+  for (const t of TICKETS) {
+    const el = document.createElement("article");
+    el.className = "ticket";
+    el.id = "t-" + t.key;
+    let control;
+    if (t.pct) {
+      control = `<div class="status" data-status></div>
+        <div class="seg" role="group" aria-label="${t.title} traffic share">` +
+        t.pct.map(p => `<button data-pct="${p}" aria-pressed="false">${p === 0 ? "Off" : p + "%"}</button>`).join("") + `</div>`;
+    } else {
+      control = `<div class="status" data-status></div><button class="act" data-toggle></button>` +
+        (t.sub ? `<button class="act undo sub" data-sub></button>` : "");
+    }
+    el.innerHTML = `<h3>${t.title}</h3><p class="concept">${t.concept}</p><p>${t.what}</p>${control}
+      <p class="watch"><b>Watch:</b> ${t.watch}</p>`;
+    $(t.group).appendChild(el);
+    if (t.pct) {
+      el.querySelectorAll("[data-pct]").forEach(b =>
+        b.addEventListener("click", () => post("/api/switches", { [t.key]: Number(b.dataset.pct) })));
+    } else {
+      el.querySelector("[data-toggle]").addEventListener("click", () =>
+        post("/api/switches", { [t.key]: !current.switches[t.key] }));
+      if (t.sub) el.querySelector("[data-sub]").addEventListener("click", () =>
+        post("/api/switches", { [t.sub.key]: !current.switches[t.sub.key] }));
+    }
+  }
+}
+
+function hourLabel(day) {
+  const h = (day % 1) * 24, hh = Math.floor(h), mm = Math.floor((h - hh) * 60);
+  const ampm = hh < 12 ? "am" : "pm", h12 = ((hh + 11) % 12) + 1;
+  return `${h12}:${String(mm).padStart(2, "0")} ${ampm}`;
+}
+
+function render(s) {
+  current = s;
+  const sw = s.switches;
+  $("clock").innerHTML = `Day ${Math.floor(s.sim_day)}<small>${hourLabel(s.sim_day)}${s.paused ? ", paused" : ""}</small>`;
+  $("clock").classList.toggle("paused", s.paused);
+  $("pause").textContent = s.paused ? "Resume" : "Pause";
+  const sp = String(Math.round(s.day_seconds));
+  if (![...$("speed").options].some(o => o.value === sp)) $("speed").add(new Option(sp + " s", sp));
+  $("speed").value = sp;
+  $("grafana").href = s.links.grafana;
+  $("prom").href = s.links.prometheus + "/alerts";
+
+  for (const t of TICKETS) {
+    const el = $("t-" + t.key), active = isActive(t, sw), st = el.querySelector("[data-status]");
+    el.classList.toggle("on", active);
+    if (t.pct) {
+      st.textContent = active ? `${sw[t.key]}% of users in treatment` : "Everyone on prompt v1";
+      st.className = "status " + (active ? "bad" : "good");
+      el.querySelectorAll("[data-pct]").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.pct) === sw[t.key])));
+    } else {
+      st.textContent = active ? t.onStatus : t.offStatus;
+      st.className = "status " + (active ? "bad" : "good");
+      const b = el.querySelector("[data-toggle]");
+      b.textContent = active ? t.off : t.on;
+      b.classList.toggle("undo", active);
+      if (t.sub) {
+        const sb = el.querySelector("[data-sub]");
+        sb.textContent = sw[t.sub.key] ? t.sub.off : t.sub.on;
+      }
+    }
+  }
+
+  const log = s.changes.map(c => `<li><span class="d">Day ${c.sim_day.toFixed(1)}</span><span>${c.what}: <b>${c.value}</b></span></li>`).join("");
+  $("log").innerHTML = log || `<li><span class="d"></span><span>Nothing yet. Flip a ticket to start a scenario.</span></li>`;
+
+  const t = s.truth, pct = (x) => (100 * x).toFixed(1) + "%";
+  $("truth").innerHTML = `
+    <dt>Menu index out of date</dt><dd>${pct(t.menu_stale_fraction)}</dd>
+    <dt>Honolulu traffic share</dt><dd>${pct(t.new_city_share)}</dd>
+    <dt>Requests that are injection attempts</dt><dd>${pct(t.injection_intensity)}</dd>
+    <dt>Open restaurants</dt><dd>${t.open_restaurants}</dd>
+    <dt>Surprise me: restaurants recommended yesterday</dt><dd>${pct(t.surprise.coverage)}</dd>
+    <dt>Surprise me: repeat recommendations</dt><dd>${pct(t.surprise.repeat_rate)}</dd>` +
+    Object.entries(t.failure_rates).map(([k, v]) => `<dt>Base rate: ${k.replaceAll("_", " ")}</dt><dd>${pct(v)}</dd>`).join("");
+}
+
+async function refresh() {
+  try {
+    const r = await fetch("/api/state");
+    render(await r.json());
+    $("err").classList.add("hidden");
+  } catch (e) {
+    $("err").classList.remove("hidden");
+  }
+}
+
+$("pause").addEventListener("click", () => post("/api/control", { paused: !current.paused }));
+$("speed").addEventListener("change", (e) => post("/api/control", { day_seconds: Number(e.target.value) }));
+$("refreset").addEventListener("click", () => post("/api/control", { reset_reference: true }));
+$("reveal").addEventListener("click", (e) => {
+  const hidden = $("truth").classList.toggle("hidden");
+  e.target.textContent = hidden ? "Reveal ground truth" : "Hide ground truth";
+  e.target.setAttribute("aria-expanded", String(!hidden));
+});
+
+build();
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>
