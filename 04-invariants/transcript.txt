@@ -1,0 +1,34 @@
+day  158.6   switches back to defaults, drift reference reset
+day  160.6   settled 2 simulated days, windows clear
+
+--- baseline: all four checks quiet
+day  160.6   violations per order
+           allergen                                     1.42%
+           discount_policy                              0.38%
+           price_mismatch                               0.00%
+           item_not_on_menu                             0.00%
+
+--- cause 1: the menu index goes stale
+day  160.6   set {'menu_sync_paused': True}
+day  166.6   waited 6.0 simulated days
+day  166.6   violations per order (menu and price light up)
+           item_not_on_menu                            16.92%
+           price_mismatch                              10.55%
+           allergen                                     0.70%
+           discount_policy                              0.60%
+day  166.6   firing alerts: InvariantViolationsHigh, JudgeFailRateHigh, RefundRateHigh
+day  166.6   switches back to defaults, drift reference reset
+day  168.6   settled 2 simulated days, windows clear
+day  171.6   waited 3.0 simulated days
+
+--- cause 2: an injection campaign
+day  171.7   set {'injection_campaign': True}
+day  177.7   waited 6.0 simulated days
+day  177.7   violations per order (only discounts light up)
+           discount_policy                              3.43%
+           allergen                                     0.38%
+           price_mismatch                               0.00%
+           item_not_on_menu                             0.00%
+day  177.7   firing alerts: DiscountPolicyViolations, InjectionFlagsSpike, SurpriseCatalogCollapse
+day  177.7   switches back to defaults, drift reference reset
+day  179.7   settled 2 simulated days, windows clear

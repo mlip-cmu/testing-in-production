@@ -1,0 +1,18 @@
+16 hand-labeled traces, judge verdicts from traces_sample.json
+
+                        judge: fail  judge: pass
+  human: fail                     7            1
+  human: pass                     1            7
+
+  agreement              14/16 = 88%
+    t07: missed a real failure (wrong_item)
+    t09: false alarm on a good conversation
+
+  sensitivity (catches a real failure)   88%   95% CI [53%, 98%]  n=8
+  specificity (lets a good one pass)     88%   95% CI [53%, 98%]  n=8
+
+  Those intervals are the finding. Sixteen traces cannot tell 85% from 60%.
+
+  dashboard now: judge fails 14.5% of sampled conversations
+  corrected for judge error: about 2.6% of conversations truly fail
+  the gap, +11.8%, is the judge's own false alarms

@@ -1,0 +1,29 @@
+day  141.1   switches back to defaults, drift reference reset
+
+--- shadow release: the candidate runs beside production, its answers discarded
+day  141.1   set {'shadow_new_llm': True}
+day  151.1   waited 10.0 simulated days
+day  151.1   shadow: discount violations                  0.99%
+day  151.1   production: discount violations              0.22%
+day  151.1   models disagree                             14.13%
+day  151.1   firing alerts: none
+day  151.1   set {'shadow_new_llm': False}
+
+--- baseline before the upgrade
+day  151.1   LLM cost per order                         $ 0.0454
+day  151.1   completion rate                             77.82%
+day  151.1   discount violations per order                0.00%
+
+--- the provider upgrades the model; nobody deployed anything
+day  151.1   set {'llm_upgraded': True}
+day  155.2   waited 4.0 simulated days
+day  155.2   LLM cost per order                         $ 0.0594
+day  155.2   p95 latency per turn                         2.50s
+day  155.2   completion rate                             74.47%
+day  155.2   discount violations per order                1.45%
+day  155.2   firing alerts: CostPerOrderHigh, DiscountPolicyViolations
+
+--- pin the old model
+day  155.2   set {'llm_upgraded': False}
+day  158.2   waited 3.0 simulated days
+day  158.2   firing alerts: none

@@ -1,30 +1,35 @@
-day    8.8   switches back to defaults, drift reference reset
+day  198.7   switches back to defaults, drift reference reset
+day  200.7   settled 2 simulated days, windows clear
 
 --- baseline, no scenario running
-simulated day    8.8   30 s per simulated day
+simulated day  200.7   30 s per simulated day
 switches on:   {'surprise_exploration': True}
 
 --- reading 1
-day    8.8   completion rate                             77.10%
-day    8.8   handoff to human                             4.44%
-day    8.8   corrections per conversation                12.03%
-day    8.8   judge fail rate (10% sample)                11.94%
-day    8.8   refund rate (delayed)                        2.28%
-day    8.8   invariant violations per order
-           allergen                                     0.69%
-           discount_policy                              0.50%
-day    8.8   LLM cost per order                         $ 0.0450
-day    8.8   firing alerts: none
-day   12.8   waited 4.0 simulated days
+day  200.7   completion rate                             78.77%
+day  200.7   handoff to human                             4.91%
+day  200.7   corrections per conversation                   0.118
+day  200.7   judge fail rate (10% sample)                13.29%
+day  200.7   refund rate (delayed)                        2.55%
+day  200.7   invariant violations per order
+           allergen                                     0.76%
+           discount_policy                              0.38%
+           price_mismatch                               0.00%
+           item_not_on_menu                             0.00%
+day  200.7   LLM cost per order                         $ 0.0444
+day  200.7   firing alerts: SurpriseCatalogCollapse
+day  204.7   waited 4.0 simulated days
 
 --- reading 2
-day   12.8   completion rate                             77.41%
-day   12.8   handoff to human                             4.52%
-day   12.8   corrections per conversation                12.05%
-day   12.8   judge fail rate (10% sample)                 8.89%
-day   12.8   refund rate (delayed)                        2.20%
-day   12.8   invariant violations per order
-           allergen                                     0.67%
-           discount_policy                              0.48%
-day   12.8   LLM cost per order                         $ 0.0449
-day   12.8   firing alerts: none
+day  204.7   completion rate                             74.95%
+day  204.7   handoff to human                             5.27%
+day  204.7   corrections per conversation                   0.120
+day  204.7   judge fail rate (10% sample)                11.64%
+day  204.7   refund rate (delayed)                        2.80%
+day  204.7   invariant violations per order
+           allergen                                     0.80%
+           discount_policy                              0.70%
+           price_mismatch                               0.00%
+           item_not_on_menu                             0.00%
+day  204.7   LLM cost per order                         $ 0.0468
+day  204.7   firing alerts: SurpriseCatalogCollapse

@@ -1,0 +1,21 @@
+day  123.3   switches back to defaults, drift reference reset
+
+--- upsell prompt to 50% of users, assignment hashed per user
+day  123.3   set {'upsell_experiment_pct': 50}
+day  133.4   waited 10.0 simulated days
+day  133.4   traffic share by arm (sample ratio check)
+           v1                                          50.87%
+           v2-upsell                                   49.13%
+day  133.4   completion by arm
+           v1                                          77.94%
+           v2-upsell                                   75.19%
+day  133.4   order value by arm
+           v2-upsell                                  $29.3743
+           v1                                         $24.6807
+day  133.4   refund rate by arm (the guardrail)
+           v2-upsell                                    5.60%
+           v1                                           2.58%
+day  133.4   firing alerts: none
+
+--- higher order value, lower completion, more refunds. The notebook decides, not this.
+day  133.4   switches back to defaults, drift reference reset

@@ -44,7 +44,7 @@ the measure is only as good as the identifier carried through both systems. Comp
 simulated days apart, and lists the firing alerts.
 
 1. Completion sits near 78%, handoff near 5%, corrections near 0.12 per conversation.
-2. The judge fails about 15% of its sample, well above the true failure rate, because it
+2. The judge fails about 13% of its sample, well above the true failure rate, because it
    falsely flags 5% of good conversations.
 3. Invariant violations sit under 1% of orders, and refunds near 2.5%.
 4. No alerts fire. Ask the class which of these numbers they would trust to notice a problem,

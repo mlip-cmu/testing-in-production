@@ -39,10 +39,12 @@ against its human label, and prints the confusion matrix, the rates, and the cor
 to the current dashboard number.
 
 1. The judge agrees with the humans on 14 of 16 traces, which sounds like plenty.
-2. The two disagreements are not interchangeable. One is a missed failure, one is a false
-   alarm, and they move the corrected rate in opposite directions.
-3. Sixteen traces give a confidence interval wide enough to drive the point home: with this
-   sample you cannot distinguish a sensitivity of 0.85 from one of 0.6.
+2. The two disagreements are not interchangeable. `t07` is a missed `wrong_item` failure and
+   `t09` is a false alarm on a good conversation, and they move the corrected rate in opposite
+   directions.
+3. Both sensitivity and specificity come out at 88%, each on a sample of 8, with a 95% Wilson
+   interval of [53%, 98%]. That interval is the finding: sixteen traces cannot tell 88% from
+   60%, so the correction they support is barely a correction.
 
 Ask the class what sample size would make the interval useful, and who on the team labels it.
 

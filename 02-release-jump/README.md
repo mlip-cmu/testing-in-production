@@ -37,15 +37,20 @@ comparison needs no labels. Computed as `shadow:discount_violation_rate:1m` agai
 `demo.sh` (output in [`transcript.txt`](transcript.txt)) runs the shadow test first, as a team
 should, and only then does the upgrade for real.
 
-1. **Shadow.** For ten simulated days the candidate runs beside production. It violates
-   discount policy 3-4× as often, and `ShadowModelDiscountViolations` fires within about a
-   minute. No user has seen any of it.
-2. **Upgrade.** Cost per order rises about 35% and `CostPerOrderHigh` fires. Discounts beyond
-   policy go from ~0.4% to ~1.4% of orders and `DiscountPolicyViolations` fires.
-3. **What stays quiet.** `CompletionRateJump` does not fire, because completion drops about
-   5% relative, below its 7% threshold. Ask whether the threshold is wrong, or whether a 4-point
-   drop deserves a page.
-4. **Rollback.** Pinning the old model clears both alerts within a minute.
+1. **Shadow.** For ten simulated days the candidate runs beside production, violating
+   discount policy on 0.99% of shadowed conversations against production's 0.22%, a gap of
+   about 4.5×. No user has seen any of it. The two models disagree on 14% of conversations,
+   which is a different and much larger number, and answers a different question.
+2. **Upgrade.** Cost per order rises from $0.045 to $0.059, about 31%, and `CostPerOrderHigh`
+   fires. Discounts beyond policy reach 1.45% of orders and `DiscountPolicyViolations` fires.
+3. **What stays quiet.** `CompletionRateJump` does not fire. Completion falls from 77.8% to
+   74.5%, a relative drop of 4.3% against its 7% threshold. Ask whether the threshold is
+   wrong, or whether a 3-point drop deserves a page.
+4. **Rollback.** Pinning the old model clears both alerts within three simulated days.
+
+`ShadowModelDiscountViolations` is marginal here by construction: it reads a `[1m]` window
+against a 0.8% threshold while the real gap sits near 1%, so it fires in some runs and not in
+others. The 5m numbers in the transcript are the ones to quote.
 
 The shadow numbers are noisy on purpose. Violations are rare, so a single ten-day window often
 reads nearer 2.5× even though the engine draws exactly 4×. Quote the direction, not the digit.

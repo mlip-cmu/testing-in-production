@@ -77,6 +77,13 @@ minutes before you present, so there are ~10 simulated days of healthy baseline.
 needs two full days before it reports, and the "vs. last week" alert needs seven. Flip one
 scenario at a time, or the effects blur together.
 
+**Restart the simulator between blocks**, with `docker compose restart simulator`. Counters are
+cumulative and a `[1m]` rate covers about two simulated days, so a reading taken straight after
+a switch flip still contains the previous scenario. One artifact is worth knowing about: one or
+two new restaurants open every simulated day, so `surprise_catalog_coverage` decays on its own
+and `SurpriseCatalogCollapse` starts firing on a healthy system somewhere past simulated day
+150, about 75 minutes of wall clock.
+
 ## The three questions for every measure
 
 The lecture asks the same three questions of each signal, and every project README answers

@@ -8,8 +8,10 @@ $S reset
 $S note "shadow release: the candidate runs beside production, its answers discarded"
 $S set shadow_new_llm=true
 $S wait --days 10
-$S query 'shadow:discount_violation_rate:5m'                 --as "shadow: discount violations"
-$S query 'agent:discount_violations_per_conversation:5m'     --as "production: discount violations"
+$S query 'sum(rate(shadow_invariant_violations_total{check="discount_policy"}[5m])) / sum(rate(shadow_comparisons_total[5m]))' \
+         --as "shadow: discount violations"
+$S query 'sum(rate(agent_invariant_violations_total{check="discount_policy"}[5m])) / sum(rate(agent_conversations_total[5m]))' \
+         --as "production: discount violations"
 $S query 'shadow:disagreement_rate:1m'                       --as "models disagree"
 $S alerts
 $S set shadow_new_llm=false

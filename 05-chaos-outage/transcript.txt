@@ -1,0 +1,25 @@
+day  179.7   switches back to defaults, drift reference reset
+day  181.7   settled 2 simulated days, windows clear
+
+--- before: healthy
+day  181.7   tool call error rate                         0.95%
+day  181.7   p95 latency per turn                         3.36s
+day  181.7   completion rate                             77.60%
+day  181.7   item not on menu                             0.00%
+
+--- the menu API goes down
+day  181.7   set {'menu_api_outage': True}
+day  184.7   waited 3.0 simulated days
+day  184.7   tool call error rate                        28.94%
+day  184.7   p95 latency per turn                         5.78s
+day  184.7   completion rate                             50.81%
+day  184.7   handoff to human                            13.57%
+day  184.7   item not on menu (invented items)           38.29%
+day  184.7   firing alerts: CompletionBelowLastWeek, CompletionRateJump, CostPerOrderHigh, DataDriftDetected, InvariantViolationsHigh, JudgeFailRateHigh, SurpriseCatalogCollapse, ToolErrorRateHigh, TurnLatencyP95High
+
+--- the API comes back
+day  184.7   set {'menu_api_outage': False}
+day  187.7   waited 3.0 simulated days
+day  187.7   tool call error rate                         1.05%
+day  187.7   completion rate                             78.19%
+day  187.7   firing alerts: CompletionBelowLastWeek, RefundRateHigh, SurpriseCatalogCollapse

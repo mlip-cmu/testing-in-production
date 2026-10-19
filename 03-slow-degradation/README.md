@@ -56,13 +56,23 @@ a few days as attackers adapt.
 `demo.sh` (output in [`transcript.txt`](transcript.txt)) runs all four in sequence, resetting
 between them.
 
-1. Stale menu: item-not-on-menu and price-mismatch violations climb, `InvariantViolationsHigh`
-   fires, `CompletionRateJump` stays quiet, refunds rise last.
-2. Honolulu: `city` and `cuisine` PSI cross 0.1, `DataDriftDetected` fires, and completion by
-   city shows the gap the aggregate hides.
-3. Exploration off: coverage falls below 40% while acceptance holds.
-4. Injection: discount violations and flags rise together, then the flag rate decays while
-   violations continue.
+1. **Stale menu.** Corrections go from 0.12 to 0.40 per conversation, completion slides to
+   73%, and refunds reach 9.6% of orders against a 2.5% baseline.
+   `InvariantViolationsHigh`, `JudgeFailRateHigh` and `RefundRateHigh` all fire;
+   `CompletionRateJump` stays quiet, because nothing jumps.
+2. **Honolulu.** `city` reaches PSI 0.46 and `cuisine` 0.48, both far past the 0.1 per-column
+   threshold, while completion by city reads 70.0% in Honolulu against 77.4% and 76.8% in the
+   other two. **`DataDriftDetected` does not fire.** It triggers on the *share* of drifting
+   columns above 25%, and this scenario moves exactly 2 of 9, which is 22.2%. Running Honolulu
+   for 18 simulated days does not change that: `city` climbs past PSI 2.8 while the third
+   column never reaches 0.1. Two badly drifted columns can matter more than three mildly
+   drifted ones, and a threshold that counts columns cannot say so.
+3. **Exploration off.** Coverage falls to 5.7% and the top five restaurants take 96% of
+   recommendations, while acceptance holds at 75%. `SurpriseCatalogCollapse` fires.
+4. **Injection.** Flags reach 2.16% of requests and discount violations 2.87% of orders. Five
+   simulated days later the flag rate has decayed to 0.88% while violations hold at 2.90%: the
+   detector stopped seeing an attack that never stopped. The guardrail brings violations down
+   to 1.91%.
 
 ## Tools
 

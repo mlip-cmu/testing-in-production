@@ -10,7 +10,7 @@ $S note "1. menu sync stops: the search index goes stale ~3% per simulated day"
 $S set menu_sync_paused=true
 $S wait --days 6
 $S query 'agent:violations_per_order:1m'         --as "invariant violations per order" --by check
-$S query 'agent:corrections_per_conversation:1m' --as "corrections per conversation"
+$S query 'agent:corrections_per_conversation:1m' --as "corrections per conversation" --unit raw
 $S query 'agent:completion_rate:1m'              --as "completion rate"
 $S query 'agent:refund_rate:1m'                  --as "refund rate (still catching up)"
 $S alerts

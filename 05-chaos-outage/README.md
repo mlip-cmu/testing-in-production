@@ -17,15 +17,20 @@ to.
 `demo.sh` (output in [`transcript.txt`](transcript.txt)) takes the menu API down for three
 simulated days.
 
-1. Tool errors jump to ~28% and `ToolErrorRateHigh` fires within about 15 s.
-2. Latency roughly doubles and `TurnLatencyP95High` fires.
-3. Completion falls by about a third, enough that `CompletionRateJump` fires here, unlike the
-   slow scenarios in [03](../03-slow-degradation/).
-4. In about a third of affected conversations the agent **invents** an item rather than saying
-   it is unavailable, which lands as `item_not_on_menu` violations and fires
-   `InvariantViolationsHigh`. The invariant catches a model behavior that no infrastructure
-   metric would have named.
-5. Restoring the API clears every alert within about a minute.
+1. Tool errors jump from 0.95% to 28.9% and `ToolErrorRateHigh` fires within about 15 s.
+2. p95 latency per turn goes from 3.4 s to 5.8 s and `TurnLatencyP95High` fires.
+3. Completion falls from 77.6% to 50.8%, a third of the way to nothing, which is finally
+   enough for `CompletionRateJump` to fire, unlike every scenario in
+   [03](../03-slow-degradation/). Handoffs rise to 13.6%, so some of that loss is the agent
+   escalating rather than users giving up.
+4. `item_not_on_menu` reaches 38% of orders. The agent **invents** an item rather than saying
+   it is unavailable, and the invariant catches a model behavior that no infrastructure metric
+   would have named.
+5. Nine alerts fire at once, which is its own lesson about alert design during an incident.
+6. **Restoring the API does not clear everything.** The fast alerts go quiet, but
+   `CompletionBelowLastWeek` and `RefundRateHigh` keep firing after the cause is gone, because
+   a trend alert and a delayed label both lag the incident in both directions. Ask the class
+   when they would declare the incident over.
 
 ## The measures
 

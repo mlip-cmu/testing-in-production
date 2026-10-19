@@ -28,16 +28,36 @@ BOOLS = ("menu_sync_paused", "llm_upgraded", "new_city_launched", "injection_cam
 NUMBERS = ("upsell_experiment_pct", "canary_v3_pct")
 
 
-def _get(url, timeout=10):
-    with urllib.request.urlopen(url, timeout=timeout) as f:
-        return json.load(f)
+def _retry(call, attempts=4, timeout=20):
+    """The simulator and Prometheus both stall occasionally under load. A scenario that
+    runs for twenty simulated minutes should survive that, so retry before giving up."""
+    for attempt in range(attempts):
+        try:
+            return call(timeout)
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            if attempt == attempts - 1:
+                raise SystemExit(f"  {type(exc).__name__} after {attempts} attempts: {url_of(exc)}")
+            time.sleep(2 * (attempt + 1))
 
 
-def _post(url, body, timeout=10):
-    req = urllib.request.Request(url, data=json.dumps(body).encode(),
-                                 headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=timeout) as f:
-        return json.load(f)
+def url_of(exc):
+    return getattr(exc, "filename", "") or str(exc)
+
+
+def _get(url):
+    def call(timeout):
+        with urllib.request.urlopen(url, timeout=timeout) as f:
+            return json.load(f)
+    return _retry(call)
+
+
+def _post(url, body):
+    def call(timeout):
+        req = urllib.request.Request(url, data=json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=timeout) as f:
+            return json.load(f)
+    return _retry(call)
 
 
 def sim_state():
@@ -57,7 +77,7 @@ def promql(expr):
     url = f"{PROM}/api/v1/query?" + urllib.parse.urlencode({"query": expr})
     try:
         res = _get(url)["data"]["result"]
-    except (urllib.error.URLError, KeyError, TimeoutError):
+    except (urllib.error.URLError, KeyError, TimeoutError, SystemExit):
         return []
     out = []
     for r in res:
@@ -108,6 +128,13 @@ def cmd_reset(args):
     _post(f"{SIM}/api/switches", body)
     _post(f"{SIM}/api/control", {"reset_reference": True})
     print(f"day {sim_day():6.1f}   switches back to defaults, drift reference reset")
+    # A [1m] rate still covers the two simulated days before this call, so a baseline read
+    # now would be the previous scenario's tail. Let the windows clear first.
+    if args.settle > 0:
+        target = sim_day() + args.settle
+        while sim_day() < target:
+            time.sleep(min(5.0, day_seconds()))
+        print(f"day {sim_day():6.1f}   settled {args.settle:g} simulated days, windows clear")
 
 
 def cmd_wait(args):
@@ -119,7 +146,7 @@ def cmd_wait(args):
 
 def cmd_query(args):
     label = args.as_ or args.expr
-    rows = promql(args.expr)
+    rows = [(m, v) for m, v in promql(args.expr) if v == v]   # drop NaN: arms with no traffic
     if not rows:
         print(f"           {label:<42} no data")
         return
@@ -149,7 +176,10 @@ def main():
     sub = p.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("state").set_defaults(func=cmd_state)
-    sub.add_parser("reset").set_defaults(func=cmd_reset)
+    r = sub.add_parser("reset")
+    r.add_argument("--settle", type=float, default=2.0,
+                   help="simulated days to wait so rate() windows clear (default 2)")
+    r.set_defaults(func=cmd_reset)
     sub.add_parser("alerts").set_defaults(func=cmd_alerts)
 
     s = sub.add_parser("set"); s.add_argument("assignments", nargs="+"); s.set_defaults(func=cmd_set)

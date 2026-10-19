@@ -26,12 +26,15 @@ arms but not to decide the experiment.
 `demo.sh` (output in [`transcript.txt`](transcript.txt)) runs the upsell prompt at 50% for ten
 simulated days and reads the arms.
 
-1. Traffic splits close to 50/50, which is the sample ratio check: a split that drifts from
-   its target means assignment is broken, and every result after that is suspect.
-2. `v2-upsell` shows higher order value and slightly lower completion.
-3. The refund rate for `v2-upsell` runs a few points higher, because the upsell prompt adds
-   3 points of refund probability. That is the guardrail metric, and the reason order value
-   alone cannot settle the question.
+1. Traffic splits 50.9/49.1, which is the sample ratio check. A split that drifts from its
+   target means assignment is broken, and every result after that is suspect.
+2. `v2-upsell` lifts order value from $24.68 to $29.37, about 19%, and costs 2.8 points of
+   completion (75.2% against 77.9%).
+3. Refunds for `v2-upsell` run at 5.6% against 2.6% for `v1`, more than double. That is the
+   guardrail metric, and the reason order value alone cannot settle the question: the arm that
+   sells more also breaks more orders.
+4. No alert fires for any of it. An experiment is not an incident, and nothing here tells you
+   whether the difference is real.
 
 Then the notebook, on the committed 30-day sample so it reproduces exactly:
 
