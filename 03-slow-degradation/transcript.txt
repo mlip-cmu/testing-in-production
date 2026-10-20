@@ -1,70 +1,94 @@
-day   63.3   switches back to defaults, drift reference reset
+day   10.1   switches back to defaults
+day   12.1   settled 2 simulated days, windows clear
+day   12.1   drift reference taken on settled traffic
 
 --- 1. menu sync stops: the search index goes stale ~3% per simulated day
-day   63.4   set {'menu_sync_paused': True}
-day   69.5   waited 6.0 simulated days
-day   69.5   invariant violations per order
-           item_not_on_menu                            17.33%
-           price_mismatch                              14.64%
-           allergen                                     0.56%
-           discount_policy                              0.37%
-day   69.5   corrections per conversation                   0.395
-day   69.5   completion rate                             73.38%
-day   69.5   refund rate (still catching up)              9.55%
-day   69.5   firing alerts: InvariantViolationsHigh, JudgeFailRateHigh, RefundRateHigh
-day   69.6   set {'menu_sync_paused': False}
-day   72.7   waited 3.0 simulated days
-day   72.7   refund rate (the delayed label arrives)      9.09%
+day   12.1   set {'menu_sync_paused': True}
+day   18.2   waited 6.0 simulated days
+day   18.2   invariant violations per order
+           item_not_on_menu                            18.22%
+           price_mismatch                              12.08%
+           allergen                                     0.86%
+           discount_policy                              0.48%
+day   18.2   corrections per conversation                   0.385
+day   18.2   completion rate                             72.07%
+day   18.2   refund rate (still catching up)              9.97%
+day   18.2   firing alerts: InvariantViolationsHigh, RefundRateHigh
+day   18.2   set {'menu_sync_paused': False}
+day   21.2   waited 3.0 simulated days
+day   21.2   refund rate (the delayed label arrives)      7.15%
 
 --- 2. launch in Honolulu: inputs change, and the drift job notices
-day   72.7   switches back to defaults, drift reference reset
-day   72.7   set {'new_city_launched': True}
-day   78.9   waited 6.0 simulated days
-day   78.9   drift score by column (PSI, >0.1 is drift)
-           cuisine                                        0.480
-           city                                           0.463
-           turns                                          0.052
-           request_chars                                  0.035
-           order_value                                    0.023
-           has_allergy_mention                            0.004
-           n_items                                        0.004
-           intent                                         0.001
-           outcome                                        0.000
-day   78.9   share of columns drifting                   22.22%
-day   78.9   completion by city (needs the label somebody added)
-           Pittsburgh                                  77.37%
-           Philadelphia                                76.82%
-           Honolulu                                    69.96%
-day   78.9   firing alerts: none
+day   21.2   switches back to defaults
+day   23.4   settled 2 simulated days, windows clear
+day   23.4   drift reference taken on settled traffic
+day   23.4   set {'new_city_launched': True}
+day   29.5   waited 6.0 simulated days
+day   29.6   drift score by column (PSI, >0.1 is drift)
+           cuisine                                        0.251
+           city                                           0.237
+           request_chars                                  0.057
+           turns                                          0.033
+           order_value                                    0.020
+           n_items                                        0.013
+           intent                                         0.008
+           outcome                                        0.007
+           has_allergy_mention                            0.000
+day   29.6   share of columns drifting                   22.22%
+day   29.6   completion by city (needs the label somebody added)
+           Philadelphia                                77.37%
+           Pittsburgh                                  75.66%
+           Honolulu                                    63.02%
+day   29.6   firing alerts: DataDriftDetected
 
---- resetting the reference: the alert clears, the quality gap does not
-day   78.9   switches back to defaults, drift reference reset
-day   78.9   set {'new_city_launched': True}
-day   82.1   waited 3.0 simulated days
-day   82.1   firing alerts: none
+--- accept Honolulu as the new normal: reset the reference, leave the city launched
+day   29.6   drift reference reset, switches untouched
+day   32.7   waited 3.0 simulated days
+day   32.7   share of columns drifting                    0.00%
+day   32.7   firing alerts: none
+day   32.7   completion by city (the alert cleared, this did not)
+           Pittsburgh                                  79.84%
+           Philadelphia                                74.51%
+           Honolulu                                    65.87%
 
 --- 3. surprise me stops exploring: the recommender learns from itself
-day   82.1   switches back to defaults, drift reference reset
-day   82.1   set {'surprise_exploration': False}
-day   88.1   waited 6.0 simulated days
-day   88.1   catalog coverage (nightly)                   5.74%
-day   88.1   share going to the top 5                    96.32%
-day   88.1   acceptance rate (barely moves)              75.00%
-day   88.1   firing alerts: SurpriseCatalogCollapse
+day   32.8   switches back to defaults
+day   34.9   settled 2 simulated days, windows clear
+day   34.9   drift reference taken on settled traffic
+day   34.9   set {'surprise_exploration': False}
+day   41.0   waited 6.0 simulated days
+day   41.0   catalog coverage (nightly)                   5.30%
+day   41.0   share going to the top 5                    98.41%
+day   41.0   acceptance rate (barely moves)              63.44%
+day   41.0   drift score by column
+           turns                                          0.025
+           request_chars                                  0.015
+           order_value                                    0.013
+           intent                                         0.011
+           cuisine                                        0.010
+           n_items                                        0.007
+           outcome                                        0.001
+           has_allergy_mention                            0.000
+           city                                           0.000
+day   41.0   firing alerts: SurpriseCatalogCollapse
 
 --- 4. injection campaign: the detector decays, the invariant does not
-day   88.1   switches back to defaults, drift reference reset
-day   88.1   set {'injection_campaign': True}
-day   93.1   waited 5.0 simulated days
-day   93.2   requests flagged as injection                2.16%
-day   93.2   discount violations per order                2.87%
-day   98.2   waited 5.0 simulated days
-day   98.2   flag rate 5 days later (recall decays)       0.88%
-day   98.2   discount violations per order                2.90%
-day   98.2   firing alerts: DiscountPolicyViolations
+day   41.0   switches back to defaults
+day   43.1   settled 2 simulated days, windows clear
+day   43.1   drift reference taken on settled traffic
+day   43.2   set {'injection_campaign': True}
+day   48.3   waited 5.0 simulated days
+day   48.3   requests flagged as injection                2.34%
+day   48.3   discount violations per order                2.48%
+day   53.5   waited 5.0 simulated days
+day   53.5   flag rate 5 days later (recall decays)       1.15%
+day   53.5   discount violations per order                2.73%
+day   53.5   firing alerts: DiscountPolicyViolations, InjectionFlagsSpike
 
 --- deploy the guardrail
-day   98.2   set {'injection_guardrail': True}
-day  102.2   waited 4.0 simulated days
-day  102.2   discount violations per order                1.91%
-day  102.2   switches back to defaults, drift reference reset
+day   53.5   set {'injection_guardrail': True}
+day   57.7   waited 4.0 simulated days
+day   57.7   discount violations per order                1.44%
+day   57.7   switches back to defaults
+day   59.9   settled 2 simulated days, windows clear
+day   59.9   drift reference taken on settled traffic

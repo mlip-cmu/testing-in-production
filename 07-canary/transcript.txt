@@ -1,22 +1,21 @@
-day  187.7   switches back to defaults, drift reference reset
-day  189.7   settled 2 simulated days, windows clear
-day  189.8   completion rate before the canary           76.84%
+day   10.1   switches back to defaults, drift reference reset
+day   12.1   settled 2 simulated days, windows clear
+day   12.1   completion rate before the canary           76.49%
 
 --- canary: prompt v3 to 10% of users
-day  189.8   set {'canary_v3_pct': 10}
-day  193.8   waited 4.0 simulated days
-day  193.8   completion by arm
-           v1                                          76.62%
-           v3                                          53.51%
-day  193.8   overall completion rate (barely moves)      74.81%
-day  193.8   traffic share by arm
-           v1                                          91.90%
-           v3                                           8.10%
-           v2-upsell                                    0.00%
-day  193.8   firing alerts: CanaryCompletionDrop, SurpriseCatalogCollapse
+day   12.1   set {'canary_v3_pct': 10}
+day   16.1   waited 4.0 simulated days
+day   16.1   completion by arm
+           v1                                          77.36%
+           v3                                          48.96%
+day   16.1   overall completion rate (barely moves)      74.76%
+day   16.1   traffic share by arm
+           v1                                          90.44%
+           v3                                           9.56%
+day   16.1   firing alerts: CanaryCompletionDrop
 
 --- roll back
-day  193.8   set {'canary_v3_pct': 0}
-day  196.8   waited 3.0 simulated days
-day  196.8   completion rate after rollback              75.81%
-day  196.8   firing alerts: SurpriseCatalogCollapse
+day   16.1   set {'canary_v3_pct': 0}
+day   19.1   waited 3.0 simulated days
+day   19.2   completion rate after rollback              76.58%
+day   19.2   firing alerts: none

@@ -43,10 +43,11 @@ the measure is only as good as the identifier carried through both systems. Comp
 `demo.sh` (output in [`transcript.txt`](transcript.txt)) reads the baseline twice, four
 simulated days apart, and lists the firing alerts.
 
-1. Completion sits near 78%, handoff near 5%, corrections near 0.12 per conversation.
-2. The judge fails about 13% of its sample, well above the true failure rate, because it
-   falsely flags 5% of good conversations.
-3. Invariant violations sit under 1% of orders, and refunds near 2.5%.
+1. Completion sits near 76%, handoff near 5%, corrections near 0.13 per conversation.
+2. The judge fails 8-11% of its sample across the two readings, well above the true failure
+   rate, because it falsely flags 5% of good conversations. The swing between readings is the
+   10% sampling, not the agent.
+3. Invariant violations sit under 1% of orders, and refunds between 2.5% and 3.9%.
 4. No alerts fire. Ask the class which of these numbers they would trust to notice a problem,
    and how long each would take.
 

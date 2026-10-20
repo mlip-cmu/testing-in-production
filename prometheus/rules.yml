@@ -93,7 +93,10 @@ groups:
         annotations:
           summary: "{{ $value | humanizePercentage }} of requests flagged as possible prompt injection"
       - alert: DataDriftDetected
-        expr: drift_share_of_columns > 0.25
+        # 2 of the 9 monitored columns is 0.222. A new city moves exactly city and cuisine,
+        # both far past the per-column 0.1, and never moves a third, so a 0.25 threshold
+        # could not fire for it at all.
+        expr: drift_share_of_columns > 0.2
         for: 20s
         labels: {severity: ticket, topic: drift}
         annotations:
@@ -140,7 +143,12 @@ groups:
         annotations:
           summary: "LLM cost per order is ${{ $value | printf \"%.3f\" }}"
       - alert: ShadowModelDiscountViolations
-        expr: shadow:discount_violation_rate:1m > 0.008
+        # Discount violations are rare, so the 1m ratio swings either side of this threshold
+        # from window to window. Read the same 5m window the shadow panel draws. Inline rather
+        # than a recording rule, so the panel and this alert share one definition of the window.
+        expr: >
+          sum(rate(shadow_invariant_violations_total{check="discount_policy"}[5m]))
+          / sum(rate(shadow_comparisons_total[5m])) > 0.008
         for: 30s
         labels: {severity: info, topic: release}
         annotations:

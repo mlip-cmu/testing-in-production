@@ -126,15 +126,18 @@ def cmd_reset(args):
     body["surprise_exploration"] = True          # on by default: exploration is healthy
     body.update({k: 0 for k in NUMBERS})
     _post(f"{SIM}/api/switches", body)
-    _post(f"{SIM}/api/control", {"reset_reference": True})
-    print(f"day {sim_day():6.1f}   switches back to defaults, drift reference reset")
-    # A [1m] rate still covers the two simulated days before this call, so a baseline read
-    # now would be the previous scenario's tail. Let the windows clear first.
+    print(f"day {sim_day():6.1f}   switches back to defaults")
+    # Gradual effects unwind over simulated days rather than instantly: the new city's traffic
+    # share decays at 0.3/day, menu staleness at 1.0/day. A [1m] rate covers two simulated
+    # days. So settle first, and only then take the drift reference, or the reference window
+    # captures the previous scenario on its way down and everything after it reads as drift.
     if args.settle > 0:
         target = sim_day() + args.settle
         while sim_day() < target:
             time.sleep(min(5.0, day_seconds()))
         print(f"day {sim_day():6.1f}   settled {args.settle:g} simulated days, windows clear")
+    _post(f"{SIM}/api/control", {"reset_reference": True})
+    print(f"day {sim_day():6.1f}   drift reference taken on settled traffic")
 
 
 def cmd_wait(args):
@@ -160,6 +163,12 @@ def cmd_query(args):
         print(f"           {name:<42} {fmt(value, args.unit)}")
 
 
+def cmd_reference(args):
+    """Accept the current traffic as the new baseline, leaving every switch alone."""
+    _post(f"{SIM}/api/control", {"reset_reference": True})
+    print(f"day {sim_day():6.1f}   drift reference reset, switches untouched")
+
+
 def cmd_alerts(args):
     rows = promql('ALERTS{alertstate="firing"}')
     names = sorted({m.get("alertname", "?") for m, _ in rows})
@@ -181,6 +190,7 @@ def main():
                    help="simulated days to wait so rate() windows clear (default 2)")
     r.set_defaults(func=cmd_reset)
     sub.add_parser("alerts").set_defaults(func=cmd_alerts)
+    sub.add_parser("reference").set_defaults(func=cmd_reference)
 
     s = sub.add_parser("set"); s.add_argument("assignments", nargs="+"); s.set_defaults(func=cmd_set)
     w = sub.add_parser("wait"); w.add_argument("--days", type=float, required=True); w.set_defaults(func=cmd_wait)

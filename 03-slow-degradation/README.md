@@ -56,23 +56,36 @@ a few days as attackers adapt.
 `demo.sh` (output in [`transcript.txt`](transcript.txt)) runs all four in sequence, resetting
 between them.
 
-1. **Stale menu.** Corrections go from 0.12 to 0.40 per conversation, completion slides to
-   73%, and refunds reach 9.6% of orders against a 2.5% baseline.
-   `InvariantViolationsHigh`, `JudgeFailRateHigh` and `RefundRateHigh` all fire;
-   `CompletionRateJump` stays quiet, because nothing jumps.
+1. **Stale menu.** Corrections climb to 0.385 per conversation from a baseline near 0.13,
+   completion slides to 72.1%, and refunds reach 10.0% of orders against a 2.5% baseline.
+   `InvariantViolationsHigh` and `RefundRateHigh` fire; `CompletionRateJump` stays quiet,
+   because nothing jumps.
 2. **Honolulu.** `city` reaches PSI 0.46 and `cuisine` 0.48, both far past the 0.1 per-column
    threshold, while completion by city reads 70.0% in Honolulu against 77.4% and 76.8% in the
-   other two. **`DataDriftDetected` does not fire.** It triggers on the *share* of drifting
-   columns above 25%, and this scenario moves exactly 2 of 9, which is 22.2%. Running Honolulu
-   for 18 simulated days does not change that: `city` climbs past PSI 2.8 while the third
-   column never reaches 0.1. Two badly drifted columns can matter more than three mildly
-   drifted ones, and a threshold that counts columns cannot say so.
-3. **Exploration off.** Coverage falls to 5.7% and the top five restaurants take 96% of
-   recommendations, while acceptance holds at 75%. `SurpriseCatalogCollapse` fires.
-4. **Injection.** Flags reach 2.16% of requests and discount violations 2.87% of orders. Five
-   simulated days later the flag rate has decayed to 0.88% while violations hold at 2.90%: the
-   detector stopped seeing an attack that never stopped. The guardrail brings violations down
-   to 1.91%.
+   other two. `DataDriftDetected` fires on a column share of 22.2%.
+
+   Reset the reference while the city stays launched and the alert clears within three
+   simulated days, with the column share back to 0.00% and Honolulu still completing 65.9%
+   against 79.8% and 74.5% in the other two cities. The alert was answering a question about
+   distributions, and it answered correctly both times.
+
+   That 22.2% is worth a minute of class time. The alert triggers on the *share* of drifting
+   columns, and this scenario moves exactly 2 of the 9 monitored ones, however long it runs:
+   over 18 simulated days `city` climbs past PSI 2.8 while the third-ranked column never
+   reaches 0.1. The threshold sits at 0.2 so that two columns are enough. At the 0.25 it
+   started with, a city launch could not have raised the alert at all, no matter how far those
+   two columns moved. Ask the class what a column-counting threshold assumes about the
+   columns, and what it would take for three mild drifts to matter more than two severe
+   ones.
+3. **Exploration off.** Coverage falls to 9.6% and the top five restaurants take 95% of
+   recommendations, while acceptance holds near 60%. `SurpriseCatalogCollapse` fires, and
+   every drift column stays under 0.04: the feedback loop changes *which* restaurants get
+   recommended without changing the distribution of anything the drift job watches. A
+   measure built for input drift is blind to this one.
+4. **Injection.** Flags reach 2.3% of requests and discount violations 2.5% of orders. Five
+   simulated days later the flag rate has decayed to 1.2% while violations have risen to 2.7%,
+   so the detector stopped seeing an attack that was getting worse. The guardrail then brings
+   violations down to 1.4%.
 
 ## Tools
 

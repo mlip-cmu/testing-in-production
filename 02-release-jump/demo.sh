@@ -15,6 +15,9 @@ $S query 'sum(rate(agent_invariant_violations_total{check="discount_policy"}[5m]
 $S query 'shadow:disagreement_rate:1m'                       --as "models disagree"
 $S alerts
 $S set shadow_new_llm=false
+$S note "the shadow alert reads a 5m window, so it clears about ten simulated days later"
+$S wait --days 10
+$S alerts
 
 $S note "baseline before the upgrade"
 $S query 'agent:cost_per_order:1m'       --as "LLM cost per order" --unit usd

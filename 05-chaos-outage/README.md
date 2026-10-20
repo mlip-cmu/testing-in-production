@@ -17,20 +17,20 @@ to.
 `demo.sh` (output in [`transcript.txt`](transcript.txt)) takes the menu API down for three
 simulated days.
 
-1. Tool errors jump from 0.95% to 28.9% and `ToolErrorRateHigh` fires within about 15 s.
-2. p95 latency per turn goes from 3.4 s to 5.8 s and `TurnLatencyP95High` fires.
-3. Completion falls from 77.6% to 50.8%, a third of the way to nothing, which is finally
-   enough for `CompletionRateJump` to fire, unlike every scenario in
-   [03](../03-slow-degradation/). Handoffs rise to 13.6%, so some of that loss is the agent
-   escalating rather than users giving up.
-4. `item_not_on_menu` reaches 38% of orders. The agent **invents** an item rather than saying
-   it is unavailable, and the invariant catches a model behavior that no infrastructure metric
-   would have named.
-5. Nine alerts fire at once, which is its own lesson about alert design during an incident.
-6. **Restoring the API does not clear everything.** The fast alerts go quiet, but
-   `CompletionBelowLastWeek` and `RefundRateHigh` keep firing after the cause is gone, because
-   a trend alert and a delayed label both lag the incident in both directions. Ask the class
-   when they would declare the incident over.
+1. Tool errors jump from 1.0% to 27.8% and `ToolErrorRateHigh` fires within about 15 s.
+2. p95 latency per turn goes from 3.4 s to 5.6 s and `TurnLatencyP95High` fires.
+3. Completion falls from 76.7% to 52.2%, which is finally enough for `CompletionRateJump` to
+   fire, unlike every scenario in [03](../03-slow-degradation/). Handoffs rise to 13.4%, so
+   part of that loss is the agent escalating rather than users giving up.
+4. `item_not_on_menu` reaches 35.9% of orders. The agent **invents** an item rather than
+   saying it is unavailable, and the invariant catches a model behavior that no infrastructure
+   metric would have named.
+5. Seven alerts fire at once, including `DataDriftDetected`, because an outage changes the
+   output distribution as surely as a new city changes the input one. Which of the seven would
+   you want to wake someone up?
+6. **Restoring the API does not clear everything.** The fast alerts go quiet within three
+   simulated days, but `RefundRateHigh` keeps firing, because refunds for orders broken during
+   the outage are still arriving. Ask the class when they would declare the incident over.
 
 ## The measures
 

@@ -1,29 +1,34 @@
-day  141.1   switches back to defaults, drift reference reset
+day   10.1   switches back to defaults, drift reference reset
+day   12.1   settled 2 simulated days, windows clear
 
 --- shadow release: the candidate runs beside production, its answers discarded
-day  141.1   set {'shadow_new_llm': True}
-day  151.1   waited 10.0 simulated days
-day  151.1   shadow: discount violations                  0.99%
-day  151.1   production: discount violations              0.22%
-day  151.1   models disagree                             14.13%
-day  151.1   firing alerts: none
-day  151.1   set {'shadow_new_llm': False}
+day   12.1   set {'shadow_new_llm': True}
+day   22.1   waited 10.0 simulated days
+day   22.1   shadow: discount violations                  1.22%
+day   22.1   production: discount violations              0.29%
+day   22.1   models disagree                             13.19%
+day   22.1   firing alerts: ShadowModelDiscountViolations
+day   22.1   set {'shadow_new_llm': False}
+
+--- the shadow alert reads a 5m window, so it clears about ten simulated days later
+day   32.2   waited 10.0 simulated days
+day   32.2   firing alerts: none
 
 --- baseline before the upgrade
-day  151.1   LLM cost per order                         $ 0.0454
-day  151.1   completion rate                             77.82%
-day  151.1   discount violations per order                0.00%
+day   32.2   LLM cost per order                         $ 0.0447
+day   32.2   completion rate                             78.19%
+day   32.2   discount violations per order                0.41%
 
 --- the provider upgrades the model; nobody deployed anything
-day  151.1   set {'llm_upgraded': True}
-day  155.2   waited 4.0 simulated days
-day  155.2   LLM cost per order                         $ 0.0594
-day  155.2   p95 latency per turn                         2.50s
-day  155.2   completion rate                             74.47%
-day  155.2   discount violations per order                1.45%
-day  155.2   firing alerts: CostPerOrderHigh, DiscountPolicyViolations
+day   32.2   set {'llm_upgraded': True}
+day   36.2   waited 4.0 simulated days
+day   36.2   LLM cost per order                         $ 0.0615
+day   36.2   p95 latency per turn                         2.44s
+day   36.2   completion rate                             74.06%
+day   36.2   discount violations per order                1.06%
+day   36.2   firing alerts: CostPerOrderHigh
 
 --- pin the old model
-day  155.2   set {'llm_upgraded': False}
-day  158.2   waited 3.0 simulated days
-day  158.2   firing alerts: none
+day   36.2   set {'llm_upgraded': False}
+day   39.4   waited 3.0 simulated days
+day   39.4   firing alerts: none

@@ -38,19 +38,27 @@ comparison needs no labels. Computed as `shadow:discount_violation_rate:1m` agai
 should, and only then does the upgrade for real.
 
 1. **Shadow.** For ten simulated days the candidate runs beside production, violating
-   discount policy on 0.99% of shadowed conversations against production's 0.22%, a gap of
-   about 4.5×. No user has seen any of it. The two models disagree on 14% of conversations,
-   which is a different and much larger number, and answers a different question.
-2. **Upgrade.** Cost per order rises from $0.045 to $0.059, about 31%, and `CostPerOrderHigh`
-   fires. Discounts beyond policy reach 1.45% of orders and `DiscountPolicyViolations` fires.
-3. **What stays quiet.** `CompletionRateJump` does not fire. Completion falls from 77.8% to
-   74.5%, a relative drop of 4.3% against its 7% threshold. Ask whether the threshold is
-   wrong, or whether a 3-point drop deserves a page.
-4. **Rollback.** Pinning the old model clears both alerts within three simulated days.
+   discount policy on about 1% of shadowed conversations against production's 0.2%, a gap
+   of roughly 4-5×, and `ShadowModelDiscountViolations` fires. No user has seen any of it.
+   The two models disagree on 14% of conversations, which is a different and much larger
+   number, and answers a different question.
+2. **Upgrade.** Cost per order rises from $0.045 to $0.062, about 38%, and `CostPerOrderHigh`
+   fires. Discounts beyond policy go from 0.41% to 1.06% of orders.
+3. **What stays quiet.** `CompletionRateJump` does not fire. Completion falls from 78.2% to
+   74.1%, a relative drop of 5.3% against its 7% threshold. Ask whether the threshold is
+   wrong, or whether a 4-point drop deserves a page.
 
-`ShadowModelDiscountViolations` is marginal here by construction: it reads a `[1m]` window
-against a 0.8% threshold while the real gap sits near 1%, so it fires in some runs and not in
-others. The 5m numbers in the transcript are the ones to quote.
+   `DiscountPolicyViolations` is a coin flip here, and worth showing as one. Its threshold is
+   1% of orders and the new model lands near there, so it fires in some runs and not in this
+   one. Rare events read through a one-minute window sit badly next to a fixed threshold,
+   which is the same problem the shadow alert had and the reason that one moved to 5m.
+4. **Rollback.** Pinning the old model clears the alerts within three simulated days.
+
+The alert reads a `[5m]` window, about ten simulated days, for the same reason the panel
+does. Discount violations are rare enough that the 1-minute ratio swings either side of the
+0.8% threshold from window to window, while the 5-minute one holds steady near 1.2%. Rare
+events and short windows make flaky alerts, and the fix is the window rather than the
+threshold.
 
 The shadow numbers are noisy on purpose. Violations are rare, so a single ten-day window often
 reads nearer 2.5× even though the engine draws exactly 4×. Quote the direction, not the digit.

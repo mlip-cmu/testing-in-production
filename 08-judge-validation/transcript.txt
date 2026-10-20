@@ -13,6 +13,6 @@
 
   Those intervals are the finding. Sixteen traces cannot tell 85% from 60%.
 
-  dashboard now: judge fails 14.5% of sampled conversations
-  corrected for judge error: about 2.6% of conversations truly fail
-  the gap, +11.8%, is the judge's own false alarms
+  dashboard now: judge fails 13.1% of sampled conversations
+  corrected for judge error: about 0.8% of conversations truly fail
+  the gap, +12.3%, is the judge's own false alarms

@@ -27,11 +27,13 @@ $S query 'drift_share_of_columns'      --as "share of columns drifting"
 $S query 'sum by (city) (rate(agent_conversations_total{outcome="completed"}[1m])) / sum by (city) (rate(agent_conversations_total[1m]))' \
          --as "completion by city (needs the label somebody added)" --by city
 $S alerts
-$S note "resetting the reference: the alert clears, the quality gap does not"
-$S reset
-$S set new_city_launched=true
+$S note "accept Honolulu as the new normal: reset the reference, leave the city launched"
+$S reference
 $S wait --days 3
+$S query 'drift_share_of_columns' --as "share of columns drifting"
 $S alerts
+$S query 'sum by (city) (rate(agent_conversations_total{outcome="completed"}[1m])) / sum by (city) (rate(agent_conversations_total[1m]))' \
+         --as "completion by city (the alert cleared, this did not)" --by city
 
 $S note "3. surprise me stops exploring: the recommender learns from itself"
 $S reset
@@ -40,6 +42,8 @@ $S wait --days 6
 $S query 'surprise_catalog_coverage'   --as "catalog coverage (nightly)"
 $S query 'surprise_top5_share'         --as "share going to the top 5"
 $S query 'surprise:acceptance_rate:1m' --as "acceptance rate (barely moves)"
+# the loop narrows what gets recommended, which the drift job sees as a changed distribution
+$S query 'drift_column_score' --as "drift score by column" --by column --unit raw
 $S alerts
 
 $S note "4. injection campaign: the detector decays, the invariant does not"

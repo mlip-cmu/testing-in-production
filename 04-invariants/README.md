@@ -61,12 +61,12 @@ are to write:
 `demo.sh` (output in [`transcript.txt`](transcript.txt)) breaks two different things and shows
 that the violations point at different causes.
 
-1. A stale menu takes `item_not_on_menu` to 16.9% of orders and `price_mismatch` to 10.6%,
-   and leaves discounts at 0.6%.
-2. An injection campaign takes `discount_policy` to 3.4% of orders, and leaves both menu
-   checks at exactly 0.0%.
-3. The allergen check stays near its 1% baseline throughout, because nothing in either
-   scenario touches it.
+1. A stale menu takes `item_not_on_menu` to 18.2% of orders and `price_mismatch` to 12.1%,
+   and leaves discounts at 0.47%, below where they started.
+2. An injection campaign takes `discount_policy` to 3.1% of orders, and leaves both menu
+   checks at exactly 0.00%.
+3. The allergen check sits near 0.85% throughout, because nothing in either scenario touches
+   it.
 
 Each cause lights up its own checks and nothing else, which is what "a violation names its own
 cause" means in practice. Note how long the counters remember: a `[1m]` rate covers about two

@@ -8,7 +8,7 @@ on:
 jobs:
   demos:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -22,8 +22,9 @@ jobs:
             curl -sf http://localhost:8000/api/state >/dev/null && break
             sleep 2
           done
-          # the drift job needs two full simulated days, the weekly alert seven
-          sleep 240
+          # run_all.sh restarts the simulator and warms up before each scenario, so no
+          # baseline is needed here beyond the first scrape
+          sleep 20
 
       - name: Run every scenario
         run: ./run_all.sh
